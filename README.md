@@ -20,3 +20,4 @@ A place for me to organize my learnings about type theory.
 
 [Practical Foundations for Programing Languages](http://profs.sci.univr.it/~merro/files/harper.pdf)
 
+[Complete and Easy Bidirectional Typechecking for Higher-Rank Polymorphism](https://arxiv.org/pdf/1306.6032.pdf)
