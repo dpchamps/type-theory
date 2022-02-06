@@ -2,3 +2,6 @@
 members = [
     "crates/chap-3"
 ]
+
+[toolchain]
+channel = "nightly"
