@@ -1,32 +1,26 @@
 #![feature(box_patterns)]
-
-#[derive(Debug, PartialEq)]
-struct FileInfo {
-    filename: String,
-    line: u32,
-    col: u32
-}
-
-#[derive(Debug, PartialEq)]
-enum Value {
-    FileInfo(FileInfo),
-    UNKNOWN
-}
+#![feature(box_syntax)]
 
 #[derive(Debug, PartialEq)]
 enum Term {
-    True(Value),
-    False(Value),
-    If(Value, Box<Term>, Box<Term>, Box<Term>),
-    Zero(Value),
-    Succ(Value, Box<Term>),
-    Pred(Value, Box<Term>),
-    IsZero(Value, Box<Term>)
+    True,
+    False,
+    If(Box<Term>, Box<Term>, Box<Term>),
+    Zero,
+    Succ(Box<Term>),
+    Pred(Box<Term>),
+    IsZero(Box<Term>)
 }
 
 fn eval(t: Term) -> Result<Term, String> {
     match t {
-        Term::If(_, box Term::True(_), box t2, _) => Ok(t2),
+        Term::If(box Term::True, box t2, _) => Ok(t2),
+        Term::If(box Term::False, _, box t3) => Ok(t3),
+        Term::If(box t1, t2, t3) => {
+            let t_prime = eval(t1)?;
+
+            Ok(Term::If(box t_prime, t2, t3))
+        },
         _ => Err("unimplemented".to_string())
     }
 }
@@ -34,15 +28,35 @@ fn eval(t: Term) -> Result<Term, String> {
 #[cfg(test)]
 mod tests {
     use crate::*;
+    
+    fn create_true_if(return_term: Term) -> Term {
+        Term::If(
+            Box::new(Term::True),
+            Box::new(return_term),
+            Box::new(Term::False)
+        )
+    }
     #[test]
-    fn boxing(){
-        let if_term = Term::If(
-            Value::UNKNOWN, 
-            Box::new(Term::True(Value::UNKNOWN)),
-            Box::new(Term::True(Value::UNKNOWN)),
-            Box::new(Term::False(Value::UNKNOWN))
+    fn if_term_true(){
+        let if_term = create_true_if(Term::True);
+
+        assert_eq!(eval(if_term), Ok(Term::True));
+    }
+
+    #[test]
+    fn if_term_if(){
+        let inner_if = Term::If(
+            box Term::False,
+            box Term::True,
+            box Term::False
         );
 
-        assert_eq!(eval(if_term), Ok(Term::True(Value::UNKNOWN)))
+        let if_if_term = Term::If(
+            box inner_if,
+            box Term::False,
+            box Term::True
+        );
+
+        assert_eq!(eval(if_if_term), Ok(Term::If(box Term::False, box Term::False, box Term::True)));
     }
 }
