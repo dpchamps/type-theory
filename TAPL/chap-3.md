@@ -6,3 +6,9 @@ Syntax:
 
 In general, describes the language. Syntax can be defined in several ways, BNF grammars, inductively via terms of a powerset, or inference rules, or concretely via set operations.
 
+
+--
+
+_stuckness_
+
+A closed term is "stuck", if it is in normal form but not a value.
