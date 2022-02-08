@@ -1,0 +1,11 @@
+- Typing
+    - Occurrence
+    - Gradual
+    - Refinement
+    - Dependent
+    - Linear
+- Semantics
+    - Operational
+    - Denotational
+    - Axiomatic
+- Lambda Calculus
