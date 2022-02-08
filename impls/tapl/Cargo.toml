@@ -1,4 +1,5 @@
 [workspace]
 members = [
-    "crates/chap-3"
+    "crates/chap-3",
+    "crates/chap-5"
 ]

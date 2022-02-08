@@ -42,7 +42,7 @@ fn eval_step(t: &Term) -> Option<Term> {
             let t_prime = eval_step(t1)?;
 
             Some(Term::If(box t_prime, t2.clone(), t3.clone()))
-        },
+        },  
         Term::Succ(box t1) => {
             let t_prime = eval_step(t1)?;
 
