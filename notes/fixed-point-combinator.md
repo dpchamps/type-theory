@@ -105,7 +105,7 @@ Y g
        λf. (λx. f(λy. x x y)) (λx. f(λy. x x y)) g
        ----------------------------------------- This is equivalent to Y 
   
-  So therefore,
+So therefore,
 
   Y g = g(λy. (Y g) y)
 ```
