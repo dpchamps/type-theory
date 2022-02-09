@@ -6,12 +6,12 @@ Lambda Calculus, Big Deal™. Interesting property:
 
 Lambda calculus is highly extensible, and eventually leads to recognizable fully-fledged languages such as ML or Scheme.
 
-- fnlambdan - shorthand for "the function that, for each n, yields..."
+- λn - shorthand for "the function that, for each n, yields..."
 
 
 Scope
 
-An occurence of the variable x is said to be bound when it occus in the body t of an abstraction fnlambdax.t. An occurence is free if it appears in a position where it is not bound by an enclosing abstraction on x. For example, in `x y` and `fnlambday.x y`, x is free.
+An occurence of the variable x is said to be bound when it occurs in the body t of an abstraction λx.t. An occurence is free if it appears in a position where it is not bound by an enclosing abstraction on x. For example, in `x y` and `λy.x y`, x is free.
 
 A term with no free variables is said to be closed, and are also called combinators.
 
@@ -35,29 +35,29 @@ Strategies for evaluation
  For examples:
 
  ```
- omega = (fnlambdax. x x) (fnlambdax. x x)
+ omega = (λx. x x) (λx. x x)
  ```   
 
 
  Fixed Point Combinator Example expansion
 
  ```
- fix = fnlambdaf. (fnlambdax. f(fnlambday. x x y)) (fnlambdax. f(fnlambday. x x y))
- g   = fnlambdafct. fnlambdan. if realeq n 0 then 1 else times n fct (n-1)
+ fix = λf. (λx. f(λy. x x y)) (λx. f(λy. x x y))
+ g   = λfct. λn. if realeq n 0 then 1 else times n fct (n-1)
 
  factorial = fix g
 
  factorial =
     fix g
-    (fnlambdaf. (fnlambdax. f(fnlambday. x x y)) (fnlambdax. f(fnlambday. x x y))) g                              // expand fixed point combinator
-    fnlambdax. g(fnlambday. x x y)) fnlambdax. g(fnlambday. x x y)                                         // apply fnlambdaf. to g 
-    g (fnlambday. ((fnlambdax. g(fnlambday. x x y)) (fnlambdax. g(fnlambday. x x y)))       y)                    // apply function application
-    g (fnlambday. ((fnlambdaf. (fnlambdax. f(fnlambday. x x y)) (fnlambdax. f(fnlambday. x x y))) g) y)                  // expand inner application
-    g fnlambday. (fix g) y                                                            // show equivalence fix g ===  g fnlambday. (fix g) y
+    (λf. (λx. f(λy. x x y)) (λx. f(λy. x x y))) g                              // expand fixed point combinator
+    λx. g(λy. x x y)) λx. g(λy. x x y)                                         // apply λf. to g 
+    g (λy. ((λx. g(λy. x x y)) (λx. g(λy. x x y)))       y)                    // apply function application
+    g (λy. ((λf. (λx. f(λy. x x y)) (λx. f(λy. x x y))) g) y)                  // expand inner application
+    g λy. (fix g) y                                                            // show equivalence fix g ===  g λy. (fix g) y
     
     
-    (fnlambdafct. fnlambdan. if realeq n 0 then 1 else times n fct (n-1)) (fnlambday. (fix g) y)    // expand g
-    fnlambdan. if realeq n 0 then 1 else times n ((fnlambday. (fix g) y) (n-1))              // show the recursive relation between g and fix
+    (λfct. λn. if realeq n 0 then 1 else times n fct (n-1)) (λy. (fix g) y)    // expand g
+    λn. if realeq n 0 then 1 else times n ((λy. (fix g) y) (n-1))              // show the recursive relation between g and fix
 
  ```
 
