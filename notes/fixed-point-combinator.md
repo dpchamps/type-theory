@@ -100,9 +100,14 @@ Y g
   λx. g(λy. x x y) λx. g(λy. x x y)
   g(λy. λx. g(λy. x x y) λx. g(λy. x x y) y)
         --------------------------------- Study this structure
-  g(λy. (λx. g(λy. x x y) λx. g(λy. x x y)) y)      
-  g(λy. ((λf. (λx. f(λy. x x y)) (λx. f(λy. x x y))) g) y)
-  g(λy. (Y g) y)
+
+            λx. g(λy. x x y)   λx. g(λy. x x y)
+       λf. (λx. f(λy. x x y)) (λx. f(λy. x x y)) g
+       ----------------------------------------- This is equivalent to Y 
+  
+  So therefore,
+
+  Y g = g(λy. (Y g) y)
 ```
 
 What we can see by applying beta-reduction to the `Y g` terms is that we get a repetitive structure where `g` is eventually applied to `Y g`.
