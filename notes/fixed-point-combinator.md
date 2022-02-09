@@ -16,7 +16,7 @@
 let f(x) = x^n
  ```
 
- Where x is _bound_ to the function `f` whereas n is _free_.
+ Where x is _bound_ to the function `f` whereas n is _free_. It could be anything, but it's defined _elsewhere_. It is not related to the current function.
 
 We could express two more functions
 
@@ -31,9 +31,9 @@ Where f and g exhibit equality and h is different because the two free variables
 
 A term with no free variables is said to be _closed_, or also a Combinator.
 
-### Beta Reduction
+### beta-reduction
 
-A term that is\ expressed in a form that can be reducible are known as a redex, e.g. (λx.x)y.
+A term that is expressed in a form that can be reducible are known as a redex, e.g. (λx.x)y.
 
 Rewriting that term via substition is called beta-reduction, e.g. λy.
 
@@ -49,7 +49,8 @@ omega = (λx. x x)(λx. x x)
 ((λx. x x) (λx. x x)) // apply substitution, etc...
 ```
 
-# `λf. (λx. f(λy. x x y)) (λx. f(λy. x x y))`
+## The Y Combinator
+### `λf. (λx. f(λy. x x y)) (λx. f(λy. x x y))`
 
 
 The simple rules of lambda calculus do not allow for a function to perform application _to itself_.
