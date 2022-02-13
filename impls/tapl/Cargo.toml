@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "crates/chap-3-4",
-    "crates/chap-5-6-7"
+    "crates/chap-5-6-7",
+    "crates/full-untyped-lambda-calculus"
 ]
