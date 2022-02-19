@@ -6,7 +6,7 @@ grammar(context: &mut Context);
 
 pub TopLevel: Vec<Command> = {
     EOF? => Vec::new(),
-    <l:PCommand> "\n"? <r:TopLevel> => {
+    <l:PCommand> ";" <r:TopLevel> => {
         [l].iter().cloned().chain(r).collect()
     }
 }
@@ -35,9 +35,7 @@ PTerm : Term = {
     "let" <n: Name> "=" <l: PTerm> "in" <r: PTerm> => {
         Term::Let(FileInfo::default(), n, Box::new(l), Box::new(r))
     },
-    "λ" <n:Name> "." <t:PTerm> => Term::Abstraction(FileInfo::default(), n, Box::new(t)),
-    "\\\\" <n:Name> "." <t:PTerm> => Term::Abstraction(FileInfo::default(), n, Box::new(t)),
-    "lambda" <n:Name> "." <t:PTerm> => Term::Abstraction(FileInfo::default(), n, Box::new(t)),
+    Lambda <n:Name> "." <t:PTerm> => Term::Abstraction(FileInfo::default(), n, Box::new(t))
 }
 
 PAppTerm : Term = {
@@ -77,6 +75,11 @@ PNonEmptyFields : Vec<(String, Box<Term>)> = {
 }
 
 PField : (String, Box<Term>) = {
+}
+
+Lambda = {
+    "λ",
+    "lambda"
 }
 
 Name: String = <s:r"[a-zA-Z]+"> => String::from(s);

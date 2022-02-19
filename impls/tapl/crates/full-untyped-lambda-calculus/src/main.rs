@@ -1,14 +1,15 @@
 #![allow(warnings)]
 #![feature(box_patterns)]
 #![feature(box_syntax)]
-#[macro_use] extern crate lalrpop_util;
+#[macro_use]
+extern crate lalrpop_util;
 
-mod syntax;
 mod context;
 mod evaluate;
 mod parser;
+mod syntax;
 
-fn main(){
+fn main() {
     println!("hello world");
 }
 

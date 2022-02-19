@@ -3,7 +3,7 @@ use crate::syntax::*;
 #[derive(Debug, PartialEq)]
 pub struct ContextMember {
     name: String,
-    binding: Binding
+    binding: Binding,
 }
 
 #[derive(Debug, PartialEq)]
@@ -21,37 +21,44 @@ impl Context {
     }
 
     pub fn add_name(&mut self, name: &str) {
-        self.add_binding(
-            ContextMember {
-                name: name.into(),
-                binding: Binding::NameBind
-            }
-        )
+        self.add_binding(ContextMember {
+            name: name.into(),
+            binding: Binding::NameBind,
+        })
     }
 
     pub fn is_name_bound(&self, find_name: &str) -> bool {
-        self.0.iter().any(|ContextMember{name, ..}| name == find_name)
+        self.0
+            .iter()
+            .any(|ContextMember { name, .. }| name == find_name)
     }
 
     pub fn get_free_name(&self, existing_name: &str) -> String {
         match self.is_name_bound(existing_name) {
             true => self.get_free_name(&format!("{}'", existing_name)),
-            false => existing_name.into()
+            false => existing_name.into(),
         }
     }
 
     pub fn lookup_name_by_idx(&self, idx: usize) -> Result<String, String> {
-        self.0.get(idx).map_or(Err(format!("index {} does not exist in context", idx)), |x| Ok(x.name.clone()))
+        self.0.get(idx).map_or(
+            Err(format!("index {} does not exist in context", idx)),
+            |x| Ok(x.name.clone()),
+        )
     }
 
-    pub fn lookup_idx_by_name(&self, name_to_find: &str) -> Result<usize,String> {
-        self.0.iter().enumerate().find_map(|(idx, ContextMember{name, ..})| {
-            if name == name_to_find {
-                return Some(idx)
-            } 
+    pub fn lookup_idx_by_name(&self, name_to_find: &str) -> Result<usize, String> {
+        self.0
+            .iter()
+            .enumerate()
+            .find_map(|(idx, ContextMember { name, .. })| {
+                if name == name_to_find {
+                    return Some(idx);
+                }
 
-            None
-        }).ok_or(format!("{} not found in context", name_to_find))
+                None
+            })
+            .ok_or(format!("{} not found in context", name_to_find))
     }
 
     pub fn len(&self) -> usize {
@@ -67,31 +74,37 @@ mod tests {
     fn context_add_binding() {
         let mut context = Context::default();
 
-        context.add_binding(ContextMember{
+        context.add_binding(ContextMember {
             name: "test".into(),
-            binding: Binding::NameBind
+            binding: Binding::NameBind,
         });
 
-        assert_eq!(context.0.contains(&ContextMember {
-            name: "test".into(),
-            binding: Binding::NameBind
-        }), true);
+        assert_eq!(
+            context.0.contains(&ContextMember {
+                name: "test".into(),
+                binding: Binding::NameBind
+            }),
+            true
+        );
     }
 
     #[test]
-    fn context_add_named_binding(){
+    fn context_add_named_binding() {
         let mut context = Context::default();
 
         context.add_name("test");
 
-        assert_eq!(context.0.contains(&ContextMember {
-            name: "test".into(),
-            binding: Binding::NameBind
-        }), true);
+        assert_eq!(
+            context.0.contains(&ContextMember {
+                name: "test".into(),
+                binding: Binding::NameBind
+            }),
+            true
+        );
     }
 
     #[test]
-    fn context_is_name_bound(){
+    fn context_is_name_bound() {
         let mut context = Context::default();
 
         context.add_name("exists");
@@ -101,7 +114,7 @@ mod tests {
     }
 
     #[test]
-    fn context_get_free_name(){
+    fn context_get_free_name() {
         let mut context = Context::default();
 
         assert_eq!(context.get_free_name("test"), "test");
@@ -112,21 +125,15 @@ mod tests {
     }
 
     #[test]
-    fn context_lookup_idx_by_name(){
+    fn context_lookup_idx_by_name() {
         let mut context = Context::default();
 
         context.add_name("index_0");
         context.add_name("index_1");
 
-        assert_eq!(
-            context.lookup_idx_by_name("index_0"),
-            Ok(0)
-        );
+        assert_eq!(context.lookup_idx_by_name("index_0"), Ok(0));
 
-        assert_eq!(
-            context.lookup_idx_by_name("index_1"),
-            Ok(1)
-        );
+        assert_eq!(context.lookup_idx_by_name("index_1"), Ok(1));
 
         assert_eq!(
             context.lookup_idx_by_name("doesnt_exist"),
@@ -135,21 +142,15 @@ mod tests {
     }
 
     #[test]
-    fn context_lookup_name_by_idx(){
+    fn context_lookup_name_by_idx() {
         let mut context = Context::default();
 
         context.add_name("index_0");
         context.add_name("index_1");
 
-        assert_eq!(
-            context.lookup_name_by_idx(0),
-            Ok("index_0".into())
-        );
+        assert_eq!(context.lookup_name_by_idx(0), Ok("index_0".into()));
 
-        assert_eq!(
-            context.lookup_name_by_idx(1),
-            Ok("index_1".into())
-        );
+        assert_eq!(context.lookup_name_by_idx(1), Ok("index_1".into()));
 
         assert_eq!(
             context.lookup_name_by_idx(2),
