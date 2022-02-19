@@ -65,11 +65,15 @@ PATerm : Term = {
 }
 
 PFields : Vec<(String, Box<Term>)> = {
-  
+    ""? => Vec::new(),
+    <f: PNonEmptyFields> => f
 }
 
 PNonEmptyFields : Vec<(String, Box<Term>)> = {
-   
+    <f: PField> => vec![f],
+    <l: PField> <r: PNonEmptyFields> => {
+        [l].iter().cloned().chain(r).collect()
+    } 
 }
 
 PField : (String, Box<Term>) = {
