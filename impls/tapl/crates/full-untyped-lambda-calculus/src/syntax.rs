@@ -24,6 +24,13 @@ pub trait Substitute {
     }
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub enum Command {
+    Import(String),
+    Eval(FileInfo, Term),
+    Bind(FileInfo, Binding)
+}
+
 #[derive(Default, Debug, PartialEq, Clone)]
 pub struct FileInfo {
     filename: String,
@@ -41,7 +48,7 @@ impl FileInfo {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Binding {
     NameBind,
     TermBind(Box<Term>)
@@ -77,6 +84,15 @@ impl Shift for Var {
 
     fn shift(&self, d: i32) -> Self {
         self.shift_n(d, 0)
+    }
+}
+
+impl Var {
+    pub fn new(index: i32, container_size: i32) -> Self {
+        Var {
+            index,
+            container_size
+        }
     }
 }
 
@@ -185,5 +201,14 @@ impl Substitute for Term {
                 }
             }
         )
+    }
+}
+
+impl Term {
+    pub fn from_int(input: i32, file_info: FileInfo) -> Term {
+        match input {
+            0 => Term::Zero(file_info),
+            _ => Term::Successor(file_info.clone(), box Term::from_int(input-1, file_info.clone()))
+        }
     }
 }

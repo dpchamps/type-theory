@@ -1,0 +1,86 @@
+use std::str::FromStr;
+use crate::syntax::{Term, FileInfo, Var, Binding, Command};
+use crate::context::{Context};
+
+grammar(context: &mut Context);
+
+pub TopLevel: Vec<Command> = {
+    EOF? => Vec::new(),
+    <l:PCommand> "\n"? <r:TopLevel> => {
+        [l].iter().cloned().chain(r).collect()
+    }
+}
+
+PCommand: Command = {
+    "use" "\""<n:Name>"\"" => Command::Import(n),
+    <t: PTerm> => Command::Eval(FileInfo::default(), t),
+    "let" <n:Name> <b:PBinder> => {
+        context.add_name(&n);
+
+        Command::Bind(FileInfo::default(), b)
+    },
+
+};
+
+PBinder: Binding = {
+    "/"? => Binding::NameBind,
+    "=" <t: PTerm> => Binding::TermBind(Box::new(t))
+}
+
+PTerm : Term = {
+    <t: PAppTerm> => t,
+    "if" <condition: PTerm> "then" <iif: PTerm> "else" <eelse: PTerm> => {
+        Term::If(FileInfo::default(), Box::new(condition), Box::new(iif), Box::new(eelse))
+    },
+    "let" <n: Name> "=" <l: PTerm> "in" <r: PTerm> => {
+        Term::Let(FileInfo::default(), n, Box::new(l), Box::new(r))
+    },
+    "λ" <n:Name> "." <t:PTerm> => Term::Abstraction(FileInfo::default(), n, Box::new(t)),
+    "\\\\" <n:Name> "." <t:PTerm> => Term::Abstraction(FileInfo::default(), n, Box::new(t)),
+    "lambda" <n:Name> "." <t:PTerm> => Term::Abstraction(FileInfo::default(), n, Box::new(t)),
+}
+
+PAppTerm : Term = {
+    <t: PPathTerm> => t,
+    "+" <t: PPathTerm> => Term::Successor(FileInfo::default(), Box::new(t)),
+    "-" <t: PPathTerm> => Term::Predecessor(FileInfo::default(), Box::new(t)),
+    "iszero" <t:PPathTerm> => Term::IsZero(FileInfo::default(), Box::new(t)),
+    <t1: PAppTerm> <t2: PPathTerm> => Term::Application(FileInfo::default(), Box::new(t1), Box::new(t2)),
+}
+
+PPathTerm : Term = {
+    <t: PATerm> => t,
+    <p: PPathTerm> "." <n:Name> => Term::Projection(FileInfo::default(), Box::new(p), n),
+}
+
+PATerm : Term = {
+    "(" <t: PTerm> ")" => t,
+    <s: StringV> => Term::String(FileInfo::default(), s),
+    <s: Name> => Term::Var(FileInfo::default(), Var::default()),
+    "true" => Term::True(FileInfo::default()),
+    "false" => Term::False(FileInfo::default()),
+    <n: IntV> => Term::from_int(n, FileInfo::default()),
+    "{" <f: PFields> "}" => Term::Record(FileInfo::default(), f),
+    <n: FloatV> => Term::Float(FileInfo::default(), n),
+}
+
+PFields : Vec<(String, Box<Term>)> = {
+    ""? => Vec::new(),
+    <f: PNonEmptyFields> => f
+}
+
+PNonEmptyFields : Vec<(String, Box<Term>)> = {
+    <f: PField> => vec![f],
+    <l: PField> <r: PNonEmptyFields> => {
+        [l].iter().cloned().chain(r).collect()
+    } 
+}
+
+PField : (String, Box<Term>) = {
+}
+
+Name: String = <s:r"[a-zA-Z]+"> => String::from(s);
+StringV: String = <s:r#""a-zA-Z""#> => String::from(s);
+IntV: i32 = <s:r"[0-9]+"> => i32::from_str(s).unwrap();
+FloatV: f32 = <s:r"[0-9]+\.[0-9]+"> => f32::from_str(s).unwrap();
+EOF: () =   <s:r""> => ();

@@ -53,6 +53,10 @@ impl Context {
             None
         }).ok_or(format!("{} not found in context", name_to_find))
     }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 }
 
 #[cfg(test)]
