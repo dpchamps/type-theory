@@ -9,6 +9,7 @@ mod evaluate;
 mod parser;
 mod syntax;
 mod context_visitor;
+mod printer;
 
 fn main() {
     println!("hello world");

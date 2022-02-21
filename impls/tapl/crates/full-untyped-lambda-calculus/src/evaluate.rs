@@ -14,11 +14,14 @@ pub enum EvalError {
 }
 
 fn is_numeric(t: &Term) -> bool {
-    match t {
+    let x = match t {
         Term::Zero(_) => true,
         Term::Successor(_, box t1) => is_numeric(t1),
         _ => false    
-    }
+    };
+
+    println!("is numeric {:?}: {}", t, x);
+    x
 }
 
 fn is_value(t: &Term) -> bool {
@@ -128,6 +131,14 @@ fn eval_inner(context: &mut Context, term: &Term) -> Option<Term> {
             let t1_prime = eval_inner(context, t1)?;
 
             Some(Term::Predecessor(file_info.clone(), box t1_prime))
+        },
+
+        Term::IsZero(_, box Term::Zero(_)) => Some(Term::True(FileInfo::default())),
+        Term::IsZero(_, box Term::Successor(_, nv)) if is_numeric(nv) => Some(Term::False(FileInfo::default())),
+        Term::IsZero(file_info, t) => {
+            let t_prime = eval_inner(context, t)?;
+
+            Some(Term::IsZero(file_info.clone(), box t_prime.clone()))
         }
         _ => None
     }
@@ -145,7 +156,7 @@ fn evaluate_top(context: &mut Context, term: &Term) -> Term {
         return evaluate_top(context, &t_prime)
     }
 
-    println!("{:#?}", term);
+    println!("Final Term: {:#?}", term);
     term.clone()
 }
 
@@ -200,7 +211,7 @@ mod tests {
             panic!()
         }
 
-        // panic!();
+
     }
 
     #[test]
@@ -224,5 +235,80 @@ mod tests {
         }else {
             panic!()
         }
+    }
+
+    #[test]
+    fn test_let_global(){
+        let (parsed, mut context) = parse("let y = true; let x = 1 in y x;").expect("Parse error");
+
+        if let Command::Eval(_, term) = &parsed[1] {
+            let term = hydrate_vars(&mut context, term);
+            let evaluated = evaluate_top(&mut context, &term);
+            let expectation = Term::Application(
+                FileInfo::default(),
+                box Term::True(FileInfo::default()),
+                box Term::from_int(1, FileInfo::default())
+            );
+
+            assert_eq!(
+                evaluated,
+                expectation
+            );
+        }else {
+            panic!()
+        }
+    }
+
+    #[test]
+    fn test_lambda_evall(){
+        let (parsed, mut context) = parse("(lambda x. x) 1;").expect("Parse error");
+
+        if let Command::Eval(_, term) = &parsed[0] {
+            let term = hydrate_vars(&mut context, term);
+            let evaluated = evaluate_top(&mut context, &term);
+            let expectation = Term::from_int(1, FileInfo::default());
+
+            assert_eq!(
+                evaluated,
+                expectation
+            );
+        }else {
+            panic!()
+        }
+
+        panic!()
+    }
+
+    #[test]
+    fn test_advanced_one(){
+        let input = r#"
+        let succ = lambda n. lambda s. lambda z. s(n s z) in
+        let add = lambda n. lambda k. n succ k in
+        succ 1;
+        "#;
+
+        let (parsed, mut context) = parse(input).expect("Parse error");
+
+        if let Command::Eval(_, term) = &parsed[0] {
+            let term = hydrate_vars(&mut context, term);
+            let evaluated = evaluate_top(&mut context, &term);
+            let expectation = Term::from_int(10, FileInfo::default());
+
+            assert_eq!(
+                evaluated,
+                expectation
+            );
+        }else {
+            panic!()
+        }
+    }
+
+    #[test]
+    fn test_advanced_two(){
+        let input = r#"
+        let eq =  in
+        let Y = λf. (λx. f(λy. x x y)) (λx. f(λy. x x y)) in
+        let g = λfn. λn. 
+        "#;
     }
 }

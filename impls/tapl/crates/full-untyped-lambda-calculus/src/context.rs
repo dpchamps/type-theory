@@ -1,9 +1,10 @@
 use crate::syntax::*;
+use std::marker::PhantomData;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ContextMember {
-    name: String,
-    binding: Binding,
+    pub name: String,
+    pub binding: Binding,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -87,6 +88,36 @@ impl Context {
         }
 
         None
+    }
+}
+
+impl<'a> IntoIterator for &'a Context {
+
+    type Item = &'a ContextMember;
+    type IntoIter = ContextIterator<'a>;
+
+    fn into_iter(self) -> Self::IntoIter { 
+        ContextIterator{
+            context: self,
+            index: 0
+        }
+    }
+}
+
+pub struct ContextIterator<'a> {
+    context: &'a Context,
+    index: usize,
+}
+
+impl<'a> Iterator for ContextIterator<'a> {
+    type Item = &'a ContextMember;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let item = self.context.0.get(self.index);
+
+        self.index += 1;
+
+        item
     }
 }
 

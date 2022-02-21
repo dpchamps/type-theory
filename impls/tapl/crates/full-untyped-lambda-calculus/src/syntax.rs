@@ -233,4 +233,38 @@ impl Term {
             ),
         }
     }
+
+    pub fn into_int(&self) -> Option<i32> {
+        fn get_number(t: &Term) -> Option<i32>{
+            match t {
+                Term::Zero(_) => Some(0),
+                Term::Successor(_, box x) => Some(get_number(&x)? + 1),
+                Term::Predecessor(_, box x) => {
+                    Some(std::cmp::max(get_number(x)? - 1, 0))
+                },
+                _ => None
+            }
+        }
+
+        get_number(&self)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::syntax::*;
+    #[test]
+    fn test_into_int(){
+        let x = Term::from_int(10, FileInfo::default());
+
+        assert_eq!(x.into_int().unwrap(), 10);
+
+        let x = Term::from_int(10, FileInfo::default());
+
+        assert_eq!(Term::Predecessor(FileInfo::default(), box x).into_int().unwrap(), 9);
+
+        let x = Term::from_int(0, FileInfo::default());
+
+        assert_eq!(Term::Predecessor(FileInfo::default(), box x).into_int().unwrap(), 0);
+    }
 }

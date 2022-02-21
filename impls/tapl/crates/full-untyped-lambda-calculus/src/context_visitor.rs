@@ -17,7 +17,7 @@ impl VisitWithContext for Term {
                 Term::String(_, _) => term.clone(),
                 Term::Var(file_info, Var {name, ..}) => {
                     let index = context.lookup_idx_by_name(name).unwrap();
-                    println!("Creating correct var csize: {}, index: {}, name: {}", container_size, index, name);
+                    println!("Creating correct var csize: {}, index: {}, name: {}. ctx: {:#?}", container_size, index, name, context);
                     Term::Var(file_info.clone(), Var::new(name, index as i32, container_size))
                 },
                 Term::True(_) => term.clone(),

@@ -1,6 +1,6 @@
 use std::str::FromStr;
 use crate::syntax::{Term, FileInfo, Var, Binding, Command};
-use crate::context::{Context};
+use crate::context::{Context, ContextMember};
 
 grammar(context: &mut Context);
 
@@ -15,7 +15,10 @@ PCommand: Command = {
     "use" <n: StringV> => Command::Import(n),
     <t: PTerm> => Command::Eval(FileInfo::default(), t),
     "let" <n:Name> <b:PBinder> => {
-        context.append_name(&n);
+        context.append_binding(ContextMember{
+            name: n,
+            binding: b.clone()
+        });
 
         Command::Bind(FileInfo::default(), b)
     },
