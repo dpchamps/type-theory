@@ -8,6 +8,7 @@ mod context;
 mod evaluate;
 mod parser;
 mod syntax;
+mod context_visitor;
 
 fn main() {
     println!("hello world");

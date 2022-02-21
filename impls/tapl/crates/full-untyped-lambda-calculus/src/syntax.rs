@@ -69,18 +69,21 @@ impl Shift for Binding {
 
 #[derive(Debug, Default, PartialEq, Clone)]
 pub struct Var {
-    index: i32,
-    container_size: i32,
+    pub name: String,
+    pub index: i32,
+    pub container_size: i32,
 }
 
 impl Shift for Var {
     fn shift_n(&self, d: i32, c: i32) -> Self {
+        println!("Term shift: d: {} c: {}, var: {:?}", d, c, &self);
         let index = match self.index {
-            index if index >= c => self.index + c,
+            index if index >= c => self.index + d,
             _ => self.index,
         };
 
         Var {
+            name: self.name.clone(),
             index,
             container_size: self.container_size + d,
         }
@@ -92,8 +95,9 @@ impl Shift for Var {
 }
 
 impl Var {
-    pub fn new(index: i32, container_size: i32) -> Self {
+    pub fn new(name: &str, index: i32, container_size: i32) -> Self {
         Var {
+            name: name.into(),
             index,
             container_size,
         }
@@ -140,12 +144,15 @@ impl Visit for Term {
                     box walk(on_var, container_size, t2),
                     box walk(on_var, container_size, t3),
                 ),
-                Term::Let(file_info, name, box t1, box t2) => Term::Let(
-                    file_info.clone(),
-                    name.clone(),
-                    box walk(on_var, container_size, t1),
-                    box walk(on_var, container_size + 1, t2),
-                ),
+                Term::Let(file_info, name, box t1, box t2) => {
+                    println!("Visiting let: {}", container_size);
+                    Term::Let(
+                        file_info.clone(),
+                        name.clone(),
+                        box walk(on_var, container_size, t1),
+                        box walk(on_var, container_size + 1, t2),
+                    )
+                },
                 Term::Projection(file_info, box t1, l) => Term::Projection(
                     file_info.clone(),
                     box walk(on_var, container_size, t1),
@@ -199,16 +206,19 @@ impl Visit for Term {
 impl Shift for Term {
     fn shift_n(&self, d: i32, c: i32) -> Term {
         self.visit(c, |(c, file_info, var)| {
-            Term::Var(file_info.clone(), var.shift_n(c, d))
+            Term::Var(file_info.clone(), var.shift_n(d, c))
         })
     }
 }
 
 impl Substitute for Term {
     fn substitute(&self, j: i32, s: &Self) -> Self {
-        self.visit(0, |(c, file_info, var)| match var.index {
-            _ if var.index == j + c => s.shift(c),
-            _ => Term::Var(file_info.clone(), var.clone()),
+        self.visit(0, |(c, file_info, var)| {
+            println!("Expected Container Size: {}. Attempting to substitute {:?} -> {:?} {}+{}={}", c, s, var, j, c, var.index);
+            match var.index {
+                _ if var.index == j + c => s.shift(c),
+                _ => Term::Var(file_info.clone(), var.clone()),
+            }
         })
     }
 }

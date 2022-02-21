@@ -81,7 +81,6 @@ mod tests {
                 )))
             )]
         );
-        // assert!(context.lookup_idx_by_name("x").is_ok());
     }
 
     #[test]
@@ -91,7 +90,7 @@ mod tests {
             Term::Abstraction(
                 FileInfo::default(),
                 "x".into(),
-                Box::new(Term::Var(FileInfo::default(), Var::default())),
+                Box::new(Term::Var(FileInfo::default(), Var::new("x", 0, 0))),
             ),
         )];
 
@@ -116,8 +115,8 @@ mod tests {
                     "y".into(),
                     Box::new(Term::Application(
                         FileInfo::default(),
-                        Box::new(Term::Var(FileInfo::default(), Var::default())),
-                        Box::new(Term::Var(FileInfo::default(), Var::default())),
+                        Box::new(Term::Var(FileInfo::default(), Var::new("y", 0, 0))),
+                        Box::new(Term::Var(FileInfo::default(), Var::new("x", 0, 0))),
                     )),
                 )),
             ),
@@ -217,7 +216,7 @@ mod tests {
                     Box::new(
                         Term::Var(
                             FileInfo::default(),
-                            Var::default()
+                            Var::new("y", 0, 0)
                         )
                     )
                 )

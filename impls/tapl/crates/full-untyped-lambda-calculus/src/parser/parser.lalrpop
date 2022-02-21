@@ -15,7 +15,7 @@ PCommand: Command = {
     "use" <n: StringV> => Command::Import(n),
     <t: PTerm> => Command::Eval(FileInfo::default(), t),
     "let" <n:Name> <b:PBinder> => {
-        context.add_name(&n);
+        context.append_name(&n);
 
         Command::Bind(FileInfo::default(), b)
     },
@@ -33,9 +33,13 @@ PTerm : Term = {
         Term::If(FileInfo::default(), Box::new(condition), Box::new(iif), Box::new(eelse))
     },
     "let" <n: Name> "=" <l: PTerm> "in" <r: PTerm> => {
+        // context.append_name(&n);
         Term::Let(FileInfo::default(), n, Box::new(l), Box::new(r))
     },
-    Lambda <n:Name> "." <t:PTerm> => Term::Abstraction(FileInfo::default(), n, Box::new(t))
+    Lambda <n:Name> "." <t:PTerm> => {
+        // context.append_name(&n);
+        Term::Abstraction(FileInfo::default(), n, Box::new(t))
+    }
 }
 
 PAppTerm : Term = {
@@ -54,7 +58,9 @@ PPathTerm : Term = {
 PATerm : Term = {
     "(" <t: PTerm> ")" => t,
     <s: StringV> => Term::String(FileInfo::default(), s),
-    <s: Name> => Term::Var(FileInfo::default(), Var::default()),
+    <n: Name> => {
+        Term::Var(FileInfo::default(), Var::new(&n, 0, 0))
+    },
     "true" => Term::True(FileInfo::default()),
     "false" => Term::False(FileInfo::default()),
     <n: IntV> => Term::from_int(n, FileInfo::default()),
