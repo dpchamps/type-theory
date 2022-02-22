@@ -32,7 +32,7 @@ pub trait Substitute {
 pub enum Command {
     Import(String),
     Eval(FileInfo, Term),
-    Bind(FileInfo, Binding),
+    Bind(FileInfo, String, Binding),
 }
 
 #[derive(Default, Debug, PartialEq, Clone)]
@@ -62,7 +62,10 @@ impl Shift for Binding {
     fn shift_n(&self, d: i32, c: i32) -> Self {
         match self {
             Binding::NameBind => Binding::NameBind,
-            Binding::TermBind(box term) => Binding::TermBind(box term.shift_n(d, c)),
+            Binding::TermBind(box term) => {
+                // println!("Shift term bind d: {} c: {}", d, c);
+                Binding::TermBind(box term.shift_n(d, c))
+            }
         }
     }
 }
@@ -76,7 +79,7 @@ pub struct Var {
 
 impl Shift for Var {
     fn shift_n(&self, d: i32, c: i32) -> Self {
-        println!("Term shift: d: {} c: {}, var: {:?}", d, c, &self);
+        // println!("Term shift: d: {} c: {}, var: {:?}. will shift: {}", d, c, &self, self.index >= c);
         let index = match self.index {
             index if index >= c => self.index + d,
             _ => self.index,
@@ -145,14 +148,14 @@ impl Visit for Term {
                     box walk(on_var, container_size, t3),
                 ),
                 Term::Let(file_info, name, box t1, box t2) => {
-                    println!("Visiting let: {}", container_size);
+                    // println!("Visiting let: {}", container_size);
                     Term::Let(
                         file_info.clone(),
                         name.clone(),
                         box walk(on_var, container_size, t1),
                         box walk(on_var, container_size + 1, t2),
                     )
-                },
+                }
                 Term::Projection(file_info, box t1, l) => Term::Projection(
                     file_info.clone(),
                     box walk(on_var, container_size, t1),
@@ -214,7 +217,7 @@ impl Shift for Term {
 impl Substitute for Term {
     fn substitute(&self, j: i32, s: &Self) -> Self {
         self.visit(0, |(c, file_info, var)| {
-            println!("Expected Container Size: {}. Attempting to substitute {:?} -> {:?} {}+{}={}", c, s, var, j, c, var.index);
+            // println!("Expected Container Size: {}. Attempting to substitute {:?} -> {:?} {}+{}={}", c, s, var, j, c, var.index);
             match var.index {
                 _ if var.index == j + c => s.shift(c),
                 _ => Term::Var(file_info.clone(), var.clone()),
@@ -235,14 +238,12 @@ impl Term {
     }
 
     pub fn into_int(&self) -> Option<i32> {
-        fn get_number(t: &Term) -> Option<i32>{
+        fn get_number(t: &Term) -> Option<i32> {
             match t {
                 Term::Zero(_) => Some(0),
                 Term::Successor(_, box x) => Some(get_number(&x)? + 1),
-                Term::Predecessor(_, box x) => {
-                    Some(std::cmp::max(get_number(x)? - 1, 0))
-                },
-                _ => None
+                Term::Predecessor(_, box x) => Some(std::cmp::max(get_number(x)? - 1, 0)),
+                _ => None,
             }
         }
 
@@ -254,17 +255,27 @@ impl Term {
 mod tests {
     use crate::syntax::*;
     #[test]
-    fn test_into_int(){
+    fn test_into_int() {
         let x = Term::from_int(10, FileInfo::default());
 
         assert_eq!(x.into_int().unwrap(), 10);
 
         let x = Term::from_int(10, FileInfo::default());
 
-        assert_eq!(Term::Predecessor(FileInfo::default(), box x).into_int().unwrap(), 9);
+        assert_eq!(
+            Term::Predecessor(FileInfo::default(), box x)
+                .into_int()
+                .unwrap(),
+            9
+        );
 
         let x = Term::from_int(0, FileInfo::default());
 
-        assert_eq!(Term::Predecessor(FileInfo::default(), box x).into_int().unwrap(), 0);
+        assert_eq!(
+            Term::Predecessor(FileInfo::default(), box x)
+                .into_int()
+                .unwrap(),
+            0
+        );
     }
 }

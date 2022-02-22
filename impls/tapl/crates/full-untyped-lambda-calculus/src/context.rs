@@ -36,13 +36,22 @@ impl Context {
         return next;
     }
 
+    pub fn update_binding(&mut self, name: &str, binding: &Binding) -> Result<(), String> {
+        let idx = self.lookup_idx_by_name(name)?;
+        self.0[idx] = ContextMember {
+            name: name.into(),
+            binding: binding.clone(),
+        };
+
+        Ok(())
+    }
+
     pub fn add_name(&self, name: &str) -> Self {
         self.add_binding(ContextMember {
             name: name.into(),
-            binding: Binding::NameBind
+            binding: Binding::NameBind,
         })
     }
-
 
     pub fn is_name_bound(&self, find_name: &str) -> bool {
         self.0
@@ -75,7 +84,10 @@ impl Context {
 
                 None
             })
-            .ok_or(format!("{} not found in context {:#?}", name_to_find, self.0))
+            .ok_or(format!(
+                "{} not found in context {:#?}",
+                name_to_find, self.0
+            ))
     }
 
     pub fn len(&self) -> usize {
@@ -83,8 +95,8 @@ impl Context {
     }
 
     pub fn get_binding(&self, idx: usize) -> Option<Binding> {
-        if let Some(ctx_member) = self.0.get(idx){
-            return Some(ctx_member.binding.shift((idx as i32)+1));
+        if let Some(ctx_member) = self.0.get(idx) {
+            return Some(ctx_member.binding.shift((idx as i32) + 1));
         }
 
         None
@@ -92,14 +104,13 @@ impl Context {
 }
 
 impl<'a> IntoIterator for &'a Context {
-
     type Item = &'a ContextMember;
     type IntoIter = ContextIterator<'a>;
 
-    fn into_iter(self) -> Self::IntoIter { 
-        ContextIterator{
+    fn into_iter(self) -> Self::IntoIter {
+        ContextIterator {
             context: self,
-            index: 0
+            index: 0,
         }
     }
 }

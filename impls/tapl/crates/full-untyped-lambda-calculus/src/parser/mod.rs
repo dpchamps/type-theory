@@ -60,7 +60,11 @@ mod tests {
 
         assert_eq!(
             commands,
-            [Command::Bind(FileInfo::default(), Binding::NameBind)]
+            [Command::Bind(
+                FileInfo::default(),
+                "x".into(),
+                Binding::NameBind
+            )]
         );
         assert!(context.lookup_idx_by_name("x").is_ok());
     }
@@ -73,6 +77,7 @@ mod tests {
             commands,
             [Command::Bind(
                 FileInfo::default(),
+                "x".into(),
                 Binding::TermBind(Box::new(Term::If(
                     FileInfo::default(),
                     Box::new(Term::True(FileInfo::default())),
@@ -128,7 +133,7 @@ mod tests {
     }
 
     #[test]
-    fn test_atomic(){
+    fn test_atomic() {
         let input = r#"
         let t = true;
         let f = false;
@@ -141,91 +146,59 @@ mod tests {
 
         let (commands, _) = parser::parse(input).expect("");
 
-        assert_eq!(commands, [
-            Command::Bind(
-                FileInfo::default(),
-                Binding::TermBind(
-                    Box::new(
-                        Term::True(
-                            FileInfo::default()
-                        )
-                    )
+        assert_eq!(
+            commands,
+            [
+                Command::Bind(
+                    FileInfo::default(),
+                    "t".into(),
+                    Binding::TermBind(Box::new(Term::True(FileInfo::default())))
+                ),
+                Command::Bind(
+                    FileInfo::default(),
+                    "f".into(),
+                    Binding::TermBind(Box::new(Term::False(FileInfo::default())))
+                ),
+                Command::Bind(
+                    FileInfo::default(),
+                    "i".into(),
+                    Binding::TermBind(Box::new(Term::Successor(
+                        FileInfo::default(),
+                        Box::new(Term::Zero(FileInfo::default()))
+                    )))
+                ),
+                Command::Bind(
+                    FileInfo::default(),
+                    "f".into(),
+                    Binding::TermBind(Box::new(Term::Float(FileInfo::default(), 1.0)))
+                ),
+                Command::Bind(
+                    FileInfo::default(),
+                    "r".into(),
+                    Binding::TermBind(Box::new(Term::Record(FileInfo::default(), vec![])))
+                ),
+                Command::Bind(
+                    FileInfo::default(),
+                    "s".into(),
+                    Binding::TermBind(Box::new(Term::String(
+                        FileInfo::default(),
+                        String::from("hello")
+                    )))
+                ),
+                Command::Bind(
+                    FileInfo::default(),
+                    "v".into(),
+                    Binding::TermBind(Box::new(Term::Var(
+                        FileInfo::default(),
+                        Var::new("y", 0, 0)
+                    )))
                 )
-            ),
-            Command::Bind(
-                FileInfo::default(),
-                Binding::TermBind(
-                    Box::new(
-                        Term::False(
-                            FileInfo::default()
-                        )
-                    )
-                )
-            ),
-            Command::Bind(
-                FileInfo::default(),
-                Binding::TermBind(
-                    Box::new(
-                        Term::Successor(
-                            FileInfo::default(),
-                            Box::new(
-                                Term::Zero(
-                                    FileInfo::default()
-                                )
-                            )
-                        )
-                    )
-                )
-            ),
-            Command::Bind(
-                FileInfo::default(),
-                Binding::TermBind(
-                    Box::new(
-                        Term::Float(
-                            FileInfo::default(),
-                            1.0
-                        )
-                    )
-                )
-            ),
-            Command::Bind(
-                FileInfo::default(),
-                Binding::TermBind(
-                    Box::new(
-                        Term::Record(
-                            FileInfo::default(),
-                            vec![]
-                        )
-                    )
-                )
-            ),
-            Command::Bind(
-                FileInfo::default(),
-                Binding::TermBind(
-                    Box::new(
-                        Term::String(
-                            FileInfo::default(),
-                            String::from("hello")
-                        )
-                    )
-                )
-            ),
-            Command::Bind(
-                FileInfo::default(),
-                Binding::TermBind(
-                    Box::new(
-                        Term::Var(
-                            FileInfo::default(),
-                            Var::new("y", 0, 0)
-                        )
-                    )
-                )
-            )
-        ])  
+            ]
+        )
     }
 
     #[test]
-    fn test_record(){
+    fn test_record() {
         let input = r#"
         let x = {
             x = "hello",
@@ -237,38 +210,23 @@ mod tests {
 
         assert_eq!(
             commands,
-            [
-                Command::Bind(
+            [Command::Bind(
+                FileInfo::default(),
+                "x".into(),
+                Binding::TermBind(Box::new(Term::Record(
                     FileInfo::default(),
-                    Binding::TermBind(
-                        Box::new(
-                            Term::Record(
-                                FileInfo::default(),
-                                vec![
-                                    (
-                                        "x".into(), 
-                                        Box::new(
-                                            Term::String(
-                                                FileInfo::default(),
-                                                "hello".into()
-                                            )
-                                        )
-                                    ),
-                                    (
-                                        "y".into(), 
-                                        Box::new(
-                                            Term::Float(
-                                                FileInfo::default(),
-                                                420.69
-                                            )
-                                        )
-                                    )
-                                ]
-                            )
+                    vec![
+                        (
+                            "x".into(),
+                            Box::new(Term::String(FileInfo::default(), "hello".into()))
+                        ),
+                        (
+                            "y".into(),
+                            Box::new(Term::Float(FileInfo::default(), 420.69))
                         )
-                    )
-                )
-            ]
+                    ]
+                )))
+            )]
         )
-    } 
+    }
 }

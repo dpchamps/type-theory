@@ -3,16 +3,27 @@
 #![feature(box_syntax)]
 #[macro_use]
 extern crate lalrpop_util;
+use std::env;
+use std::fs;
+use std::path::PathBuf;
 
 mod context;
+mod context_visitor;
 mod evaluate;
 mod parser;
-mod syntax;
-mod context_visitor;
 mod printer;
+mod syntax;
 
 fn main() {
-    println!("hello world");
+    let args: Vec<String> = env::args().collect();
+    let file = fs::canonicalize(PathBuf::from(&args[1]))
+        .unwrap()
+        .into_os_string()
+        .into_string()
+        .expect("");
+    println!("Reading {}", file);
+
+    evaluate::eval(&file).expect("Failed to evaluate");
 }
 
 #[cfg(test)]
