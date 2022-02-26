@@ -28,19 +28,7 @@ impl fmt::Display for Term {
             }
             Term::Abstraction(_, name, box t2) => write!(f, "λ{}. {}", name, t2),
             Term::Application(_, t1, t2) => write!(f, "({} {})", t1, t2),
-            Term::Zero(_) => write!(
-                f,
-                "{}",
-                self.into_int()
-                    .map_or(String::from("NaN"), |x| x.to_string())
-            ),
-            Term::Successor(_, _) => write!(
-                f,
-                "{}",
-                self.into_int()
-                    .map_or(String::from("NaN"), |x| x.to_string())
-            ),
-            Term::Predecessor(_, _) => write!(
+            Term::Zero(_) | Term::Successor(_, _) | Term::Predecessor(_, _) => write!(
                 f,
                 "{}",
                 self.into_int()
@@ -90,7 +78,7 @@ mod tests {
 
     #[test]
     fn test_print_simple() {
-        let id = "λx.x;";
+        let id = "λx. x;";
         let (parsed, _) = parse(id).expect("parse error");
 
         assert_eq!(format!("{}", parsed[0]), id);
@@ -100,7 +88,7 @@ mod tests {
     fn test_print_complex() {
         let input = r#"
         let Y = λf. (λx. f(λy. x x y)) (λx. f(λy. x x y)) in
-        let g = λx.x in
+        let g = λx. x in
         Y g;
         "#;
 
