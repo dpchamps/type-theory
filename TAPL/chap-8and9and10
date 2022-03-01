@@ -1,0 +1,118 @@
+# Notes
+
+The Typing Relation
+
+written `t: T` and defined by a set of inference rules assigning types 
+to terms.
+
+A term `t` is _typeable_ (aka well typed) if there is some T such that t : T.
+
+## The Inversion Lemma
+
+Also known as the generation lemma for the typing relation. 
+
+When reasoning about a typing relation, it's useful to make statements in
+the form of
+
+> If a term of the form t has any type at all, then it has type T
+
+```
+1. if true : R, then R = Bool
+2. if false : R, then R = Bool
+... etc
+```
+
+The inversion lemma leads to a recursive algorithm for calculating the types of terms.
+
+## Progress + Preservation
+
+AKA Type Safety.
+
+Progress: A well-typed term is not stuck. Either it is a value or it can take a step according to the evaluation rules.
+
+Preservation: If a well-typed term takes a step of evaluation, then the resulting term is also well-typed.
+
+## Simply Typed Lambda Calculus
+
+### The function type
+
+```
+T ::=
+    T→T             type of functions
+    Bool            type of booleans
+```
+
+The funcition type `T1 → T2` describes a function that expects arguments of type `T1` and return results of `T2`
+
+
+Explicitly Typed: Languages in which type annotations in terms are used to help guide the typechecker.
+
+Implicitly Typed: Languages in which we ask the typechecker to infer or reconstruct the type information.
+
+These can also be called type-assignment systems.
+
+## Typing context
+
+Usually denoted Γ (uppercase gamma).
+
+Γ can be thought of as a finite function from variables to thier types. The domain of Γ (dom(Γ)) is the set of all variables bound by Γ.
+
+## The Curry-Howard Correspondence
+
+The "→" type constructor comes with typing rules of two kinds:
+
+1. an introduction rule (T-ABS) describing how elementes of the type can be created
+1. an elimination rule (T-APP) describing how elements of the type can be used
+
+> When an introduction form (λ) is an immediate subterm of an elimination form (application), the result is a redex-- an oppertunity for computation
+
+Introduction and elimination terms are frequently used while discussing type systems.
+
+The idea of the Curry Howard Correspondence (aka the Curry-Howard Isomorphism) is that in constructive logics, a proof of a proposition P consists of concrete evidence for P.
+
+Curry and Howard noticed that evidence has a strong computational feel.
+
+The observation gives rise to the following correspondence
+
+|Logic    | Programming Languages|
+|---------|----------------------|
+|propositions| types
+|proposition P ⊃ Q| type P->Q|
+|proposition P^Q| type P x Q|
+|proof of proposition P| t : P|
+|proposition P is provable| type P is inhabited|
+
+## Erasure and Typability
+
+The erasure of a simply types term is defined as:
+
+erase(x) = x
+erase(λx:T1. t2) = λx. erase(t2)
+erase(t1 t2) = erase(t1) erase(t2)
+
+
+## Curry-Style vs Church-Style
+
+Two different styles in which the semantics of the simply typed lambda-calculus can be formulated: 
+
+1. an evaluation relation defined directly on the syntax of the simply typed calculus
+2. a compilation to an untyped calculus plus an evaluation relation on untyped terms.
+
+Both styles share in common the desire to discuss the behavior of a term t whether or not t is actually well typed.
+
+This form of language definition is often called Curry-Style: 
+1. we first define the terms
+2. then define a semantics showing how they behave
+3. then give a typesystem that rejects some terms whose behaviors we don't like
+
+A different way to define a language is Church-Style:
+1. define terms
+2. identify the well-typed terms 
+3. then give the semantics to just these
+
+In church style systems, typing is prior to semantics.
+
+Historically:
+
+implicitly typed systems are often given in the curry style.
+explicitly typed systems are often given in the church style.
