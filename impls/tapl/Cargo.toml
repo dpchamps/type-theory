@@ -4,5 +4,5 @@ members = [
     "crates/chap-5-6-7",
     "crates/full-untyped-lambda-calculus",
     "crates/simply-typed-lambda-calculus",
-    "crates/context"
+    "crates/core"
 ]

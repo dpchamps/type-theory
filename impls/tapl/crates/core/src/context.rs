@@ -1,39 +1,6 @@
-use std::fmt::Debug;
+use crate::syntax::{Shift, Substitute};
 
-pub trait Term: Debug + PartialEq + Clone + Shift + Substitute {}
-
-pub trait Binding: Debug + PartialEq + Clone + Shift + Substitute {}
-
-pub trait Shift {
-    fn shift_n(&self, d: i32, c: i32) -> Self
-    where
-        Self: Sized+Clone 
-    {
-        self.clone()
-    }
-
-    fn shift(&self, d: i32) -> Self
-    where
-        Self: Sized+Clone,
-    {
-        self.shift_n(d, 0)
-    }
-}
-
-pub trait Substitute {
-    fn substitute(&self, j: i32, s: &Self) -> Self 
-    where Self: Sized + Clone
-    {
-        self.clone()
-    }
-
-    fn substitute_top(&self, s: &Self) -> Self
-    where
-        Self: Sized + Shift + Clone,
-    {
-        self.substitute(0, &s.shift(1)).shift(-1)
-    }
-}
+pub trait Binding: PartialEq + Clone + Shift + Substitute {}
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ContextMember<T: Binding> {
@@ -167,55 +134,5 @@ impl<'a, T:Binding> Iterator for ContextIterator<'a, T> {
         self.index += 1;
 
         item
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::*;
-
-    #[derive(Debug, Clone, PartialEq, Default)]
-    struct TestBinding {}
-
-    impl Shift for TestBinding {
-        fn shift_n(&self, d: i32, c: i32) -> TestBinding{
-            unimplemented!()
-        }
-    }
-
-    impl Substitute for TestBinding {
-        fn substitute(&self, j: i32, s: &Self) -> TestBinding {
-            unimplemented!()
-        }
-    }
-
-    impl Binding for TestBinding {}
-
-    #[test]
-    fn it_appends_a_binding() {
-        let mut context = Context::default();
-
-        context.append_binding(&ContextMember {
-            name: String::from("test"),
-            binding: TestBinding::default()
-        });
-
-        assert_eq!(context.get_name(0).unwrap(), "test");
-    }
-
-    #[test]
-    fn it_finds_a_binding(){
-        let mut context = Context::default();
-
-        context.append_binding(&ContextMember {
-            name: String::from("test"),
-            binding: TestBinding::default()
-        });
-
-        let (idx, ctx_member) = context.find(|(_, ContextMember{name, ..})| name == "test").unwrap();
-
-        assert_eq!(idx, 0);
-        assert_eq!(ctx_member.name, "test");
-        assert_eq!(ctx_member.binding, TestBinding::default());
     }
 }

@@ -1,22 +1,22 @@
 #![feature(box_patterns)]
 #![feature(box_syntax)]
 
-use context::*;
+use core::*;
 use std::fmt;
 
 #[derive(Clone, Debug, PartialEq)]
-enum Type {
+enum SimpleType {
     Unknown,
-    Arrow(Box<Type>, Box<Type>),
+    Arrow(Box<SimpleType>, Box<SimpleType>),
     Bool,
 }
 
-impl fmt::Display for Type {
+impl fmt::Display for SimpleType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Type::Arrow(box t1, box t2) => write!(f, "{} → {}", t1, t2),
-            Type::Bool => write!(f, "BOOL"),
-            Type::Unknown => write!(f, "UNKNOWN"),
+            SimpleType::Arrow(box t1, box t2) => write!(f, "{} → {}", t1, t2),
+            SimpleType::Bool => write!(f, "BOOL"),
+            SimpleType::Unknown => write!(f, "UNKNOWN"),
         }
     }
 }
@@ -24,7 +24,7 @@ impl fmt::Display for Type {
 #[derive(Clone, Debug, PartialEq)]
 enum SimpleBinding {
     NameBind,
-    VarBind(Type),
+    VarBind(SimpleType),
 }
 
 impl fmt::Display for SimpleBinding {
@@ -45,7 +45,7 @@ struct Var {
 #[derive(Clone, Debug, PartialEq)]
 enum SimpleTerm {
     Var(Var),
-    Abstraction(String, Type, Box<SimpleTerm>),
+    Abstraction(String, SimpleType, Box<SimpleTerm>),
     Application(Box<SimpleTerm>, Box<SimpleTerm>),
     True,
     False,
@@ -60,28 +60,21 @@ impl Shift for SimpleTerm {}
 impl Substitute for SimpleTerm {}
 impl Term for SimpleTerm {}
 
+impl Type for SimpleType {}
+
 #[derive(Debug, PartialEq)]
 enum TypeCheckError<B: Binding, T: Term> {
     IncorrectBinding(B),
     BindingNotFound,
-    Fail(T, Type, Type),
+    Fail(T, SimpleType, SimpleType),
 }
 
-trait TypeCheck<B: Binding> {
-    fn get_type(ctx: &Context<B>, idx: &i32) -> Result<Type, TypeCheckError<B, Self>>
-    where
-        Self: Term;
-    fn type_of(&self, ctx: &Context<B>) -> Result<Type, TypeCheckError<B, Self>>
-    where
-        Self: Term;
-}
-
-impl TypeCheck<SimpleBinding> for SimpleTerm {
+impl TypeCheck<SimpleBinding, SimpleType, TypeCheckError<SimpleBinding, SimpleTerm>> for SimpleTerm {
     fn get_type(
         ctx: &Context<SimpleBinding>,
-        idx: &i32,
-    ) -> Result<Type, TypeCheckError<SimpleBinding, SimpleTerm>> {
-        match ctx.get_binding(*idx as usize) {
+        idx: i32,
+    ) -> Result<SimpleType, TypeCheckError<SimpleBinding, SimpleTerm>> {
+        match ctx.get_binding(idx as usize) {
             Some(SimpleBinding::VarBind(ty)) => Ok(ty.clone()),
             Some(incorrect_binding) => {
                 Err(TypeCheckError::IncorrectBinding(incorrect_binding.clone()))
@@ -93,40 +86,40 @@ impl TypeCheck<SimpleBinding> for SimpleTerm {
     fn type_of(
         &self,
         ctx: &Context<SimpleBinding>,
-    ) -> Result<Type, TypeCheckError<SimpleBinding, SimpleTerm>> {
+    ) -> Result<SimpleType, TypeCheckError<SimpleBinding, SimpleTerm>> {
         match self {
-            SimpleTerm::Var(Var { index, .. }) => SimpleTerm::get_type(ctx, index),
-            SimpleTerm::Abstraction(param, tyT1, box t2) => {
+            SimpleTerm::Var(Var { index, .. }) => SimpleTerm::get_type(ctx, *index),
+            SimpleTerm::Abstraction(param, ty_t1, box t2) => {
                 let name = ctx.get_free_name(param);
                 let next_ctx = ctx.with_new_binding(&ContextMember {
                     name,
-                    binding: SimpleBinding::VarBind(tyT1.clone()),
+                    binding: SimpleBinding::VarBind(ty_t1.clone()),
                 });
-                let tyT2 = t2.type_of(&next_ctx)?;
+                let ty_t2 = t2.type_of(&next_ctx)?;
 
-                Ok(Type::Arrow(box tyT1.clone(), box tyT2.clone()))
+                Ok(SimpleType::Arrow(box ty_t1.clone(), box ty_t2.clone()))
             }
             SimpleTerm::Application(box t1, box t2) => {
                 let ty_t1 = t1.type_of(ctx)?;
                 let ty_t2 = t2.type_of(ctx)?;
 
                 match ty_t1 {
-                    Type::Arrow(box ty_t11, box ty_t22) if ty_t11 == ty_t2 => Ok(ty_t22),
-                    Type::Arrow(box ty_11, box ty_t22) => {
+                    SimpleType::Arrow(box ty_t11, box ty_t22) if ty_t11 == ty_t2 => Ok(ty_t22),
+                    SimpleType::Arrow(box ty_11, box ty_t22) => {
                         Err(TypeCheckError::Fail(self.clone(), ty_11, ty_t22))
                     }
                     _ => Err(TypeCheckError::Fail(
                         self.clone(),
-                        Type::Arrow(box Type::Unknown, box Type::Unknown),
+                        SimpleType::Arrow(box SimpleType::Unknown, box SimpleType::Unknown),
                         ty_t1,
                     )),
                 }
             }
-            SimpleTerm::True | SimpleTerm::False => Ok(Type::Bool),
+            SimpleTerm::True | SimpleTerm::False => Ok(SimpleType::Bool),
             SimpleTerm::Conditional(box t1, box t2, box t3) => {
                 let t_if = t1.type_of(ctx)?;
-                if t_if != Type::Bool {
-                    return Err(TypeCheckError::Fail(self.clone(), Type::Bool, t_if));
+                if t_if != SimpleType::Bool {
+                    return Err(TypeCheckError::Fail(self.clone(), SimpleType::Bool, t_if));
                 };
 
                 let t_t2 = t2.type_of(ctx)?;
@@ -150,13 +143,13 @@ fn main() {
 #[cfg(test)]
 mod test {
     use crate::*;
-    use context::*;
+    use core::*;
 
     #[test]
     fn typecheck_bool() {
         let context = Context::<SimpleBinding>::default();
-        assert_eq!(SimpleTerm::True.type_of(&context), Ok(Type::Bool));
-        assert_eq!(SimpleTerm::False.type_of(&context), Ok(Type::Bool));
+        assert_eq!(SimpleTerm::True.type_of(&context), Ok(SimpleType::Bool));
+        assert_eq!(SimpleTerm::False.type_of(&context), Ok(SimpleType::Bool));
     }
 
     #[test]
@@ -169,10 +162,10 @@ mod test {
 
         context.append_binding(&ContextMember {
             name: "test".into(),
-            binding: SimpleBinding::VarBind(Type::Bool),
+            binding: SimpleBinding::VarBind(SimpleType::Bool),
         });
 
-        assert_eq!(var.type_of(&context), Ok(Type::Bool));
+        assert_eq!(var.type_of(&context), Ok(SimpleType::Bool));
 
         context.append_binding(&ContextMember {
             name: "somethingElse".into(),
@@ -202,10 +195,10 @@ mod test {
             box SimpleTerm::True,
         );
 
-        assert_eq!(conditional.type_of(&context), Ok(Type::Bool));
+        assert_eq!(conditional.type_of(&context), Ok(SimpleType::Bool));
 
         let conditional = SimpleTerm::Conditional(
-            box SimpleTerm::Abstraction("x".into(), Type::Bool, box SimpleTerm::False),
+            box SimpleTerm::Abstraction("x".into(), SimpleType::Bool, box SimpleTerm::False),
             box SimpleTerm::False,
             box SimpleTerm::True,
         );
@@ -214,23 +207,23 @@ mod test {
             conditional.type_of(&context),
             Err(TypeCheckError::Fail(
                 conditional,
-                Type::Bool,
-                Type::Arrow(box Type::Bool, box Type::Bool)
+                SimpleType::Bool,
+                SimpleType::Arrow(box SimpleType::Bool, box SimpleType::Bool)
             ))
         );
 
         let conditional = SimpleTerm::Conditional(
             box SimpleTerm::True,
             box SimpleTerm::False,
-            box SimpleTerm::Abstraction("x".into(), Type::Bool, box SimpleTerm::False),
+            box SimpleTerm::Abstraction("x".into(), SimpleType::Bool, box SimpleTerm::False),
         );
 
         assert_eq!(
             conditional.type_of(&context),
             Err(TypeCheckError::Fail(
                 conditional.clone(),
-                Type::Bool,
-                Type::Arrow(box Type::Bool, box Type::Bool)
+                SimpleType::Bool,
+                SimpleType::Arrow(box SimpleType::Bool, box SimpleType::Bool)
             ))
         );
     }
@@ -241,23 +234,27 @@ mod test {
 
         context.append_binding(&ContextMember {
             name: "yabadabadoo".into(),
-            binding: SimpleBinding::VarBind(Type::Arrow(box Type::Bool, box Type::Unknown)),
+            binding: SimpleBinding::VarBind(SimpleType::Arrow(box SimpleType::Bool, box SimpleType::Unknown)),
         });
 
+        // λx. y
         let abstraction = SimpleTerm::Abstraction(
             "x".into(),
-            Type::Bool,
+            SimpleType::Bool,
             box SimpleTerm::Var(Var {
-                index: 0,
+                index: 1,
                 container_size: 0,
             }),
         );
 
         assert_eq!(
             abstraction.type_of(&context),
-            Ok(Type::Arrow(
-                box Type::Bool,
-                box Type::Unknown
+            Ok(SimpleType::Arrow(
+                box SimpleType::Bool,
+                box SimpleType::Arrow(
+                    box SimpleType::Bool,
+                    box SimpleType::Unknown
+                )
             ))
         )
     }
